@@ -8,3 +8,6 @@ Sources :
 - https://github.com/anthropics/claude-cookbooks
 - https://github.com/pytorch/tutorials
 - https://github.com/huggingface/cookbook
+- https://github.com/meta-llama/llama-cookbook
+- https://github.com/mistralai/cookbook
+- https://github.com/microsoft/PhiCookBook
