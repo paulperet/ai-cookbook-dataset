@@ -1,4 +1,118 @@
-# Basics of Function Calling
+# Efficient Multimodality with Function Calling
+
+```python
+!pip install requests python-dotenv pandas pillow --upgrade mistralai
+from pprint import pprint
+from IPython.display import Image, display
+from urllib.parse import urlparse, urljoin
+import base64
+from io import BytesIO
+from dotenv import load_dotenv
+from PIL import Image as PILImage
+import os 
+from mistralai import Mistral
+import json
+import pandas as pd
+import requests
+```
+
+[First Entry, ..., Last Entry]
+
+```python
+# Path to your image
+image_path = "./table.png"
+display(Image(filename=image_path))
+```
+
+```python
+import base64
+import os
+from mistralai import Mistral
+
+def encode_image(image_path):
+    """Encode the image to base64."""
+    try:
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode('utf-8')
+    except FileNotFoundError:
+        print(f"Error: The file {image_path} was not found.")
+        return None
+    except Exception as e:  # Added general exception handling
+        print(f"Error: {e}")
+        return None
+
+
+
+# Getting the base64 string
+base64_image = encode_image(image_path)
+
+load_dotenv()
+# Retrieve the API key from environment variables
+api_key = os.getenv("MISTRAL_KEY")
+
+# Specify model
+model = "pixtral-12b-2409"
+
+# Initialize the Mistral client
+client = Mistral(api_key=api_key)
+
+# Define the messages for the chat
+messages = [
+    {
+        "role": "user",
+        "content": [
+            {
+                "type": "text",
+                "text": "Please extract the text from this image and output as a json object."
+            },
+            {
+                "type": "image_url",
+                "image_url": f"" 
+            }
+        ]
+    }
+]
+
+# Get the chat response
+chat_response = client.chat.complete(
+    model=model,
+    messages=messages,
+    temperature=0.0,
+    response_format = {
+          "type": "json_object",
+      }
+)
+
+# Print the content of the response
+print(chat_response.choices[0].message.content)
+```
+
+```python
+import json
+import pandas as pd
+from typing import Union
+
+def json_to_dataframe(json_data: Union[str, dict], key: str = None) -> pd.DataFrame:
+    # If json_data is a string, parse it into a dictionary
+    if isinstance(json_data, str):
+        json_data = json.loads(json_data)
+    
+    # If a key is provided, extract the list of records from the JSON object
+    if key is not None:
+        data = json_data[key]
+    else:
+        data = json_data
+    
+    # Convert the list of records to a pandas DataFrame
+    df = pd.DataFrame(data)
+    
+    return df
+
+df = json_to_dataframe(chat_response.choices[0].message.content, key='transactions')
+df
+```
+
+# Function Calling
 
 Function calling allows Mistral models to connect to external tools. By integrating Mistral models with external tools such as user defined functions or APIs, users can easily build applications catering to specific use cases and practical problems. In this guide, for instance, we wrote two functions for tracking payment status and payment date. We can use these two tools to provide answers for payment-related queries.
 
@@ -13,26 +127,6 @@ In this guide, we will walk through a simple example to demonstrate how function
 
 Before we get started, let’s assume we have a dataframe consisting of payment transactions. When users ask questions about this dataframe, they can use certain tools to answer questions about this data. This is just an example to emulate an external database that the LLM cannot directly access.
 
-```python
-!pip install pandas mistralai
-```
-
-```python
-import pandas as pd
-
-# Assuming we have the following data
-data = {
-    'transaction_id': ['T1001', 'T1002', 'T1003', 'T1004', 'T1005'],
-    'customer_id': ['C001', 'C002', 'C003', 'C002', 'C001'],
-    'payment_amount': [125.50, 89.99, 120.00, 54.30, 210.20],
-    'payment_date': ['2021-10-05', '2021-10-06', '2021-10-07', '2021-10-05', '2021-10-08'],
-    'payment_status': ['Paid', 'Unpaid', 'Paid', 'Paid', 'Pending']
-}
-
-# Create DataFrame
-df = pd.DataFrame(data)
-```
-
 ## Step 1. User: specify tools and query
 
 ### Tools
@@ -42,12 +136,12 @@ Users can define all the necessary tools for their use cases.
 - In many cases, we might have multiple tools at our disposal. For example, let’s consider we have two functions as our two tools: `retrieve_payment_status` and `retrieve_payment_date` to retrieve payment status and payment date given transaction ID.
 
 ```python
-def retrieve_payment_status(df: data, transaction_id: str) -> str:
+def retrieve_payment_status(df: df, transaction_id: str) -> str:
     if transaction_id in df.transaction_id.values:
         return json.dumps({'status': df[df.transaction_id == transaction_id].payment_status.item()})
     return json.dumps({'error': 'transaction id not found.'})
 
-def retrieve_payment_date(df: data, transaction_id: str) -> str:
+def retrieve_payment_date(df: df, transaction_id: str) -> str:
     if transaction_id in df.transaction_id.values:
         return json.dumps({'date': df[df.transaction_id == transaction_id].payment_date.item()})
     return json.dumps({'error': 'transaction id not found.'})
@@ -118,11 +212,7 @@ messages = [{"role": "user", "content": "What's the status of my transaction T10
 How do Mistral models know about these functions and know which function to use? We provide both the user query and the tools specifications to Mistral models. The goal in this step is not for the Mistral model to run the function directly. It’s to 1) determine the appropriate function to use , 2) identify if there is any essential information missing for a function, and 3) generate necessary arguments for the chosen function.
 
 ```python
-import os
-from mistralai import Mistral
-
-api_key = os.environ["MISTRAL_API_KEY"]
-model = "mistral-large-latest"
+model = "pixtral-12b-2409"
 
 client = Mistral(api_key=api_key)
 response = client.chat.complete(
@@ -134,8 +224,6 @@ response = client.chat.complete(
 response
 ```
 
-`[ChatCompletionResponse(id='7cbd8962041442459eb3636e1e3cbf10', object='chat.completion', model='mistral-large-latest', usage=Usage(prompt_tokens=94, completion_tokens=30, total_tokens=124), created=1721403550, choices=[Choices(index=0, finish_reason='tool_calls', message=AssistantMessage(content='', tool_calls=[ToolCall(function=FunctionCall(name='retrieve_payment_status', arguments='{"transaction_id": "T1001"}'), id='D681PevKs', type='function')], prefix=False, role='assistant'))])]`
-
 ```python
 messages.append(response.choices[0].message)
 ```
@@ -143,8 +231,6 @@ messages.append(response.choices[0].message)
 ```python
 messages
 ```
-
-`[{'role': 'user', 'content': "What's the status of my transaction T1001?"}, AssistantMessage(content='', tool_calls=[ToolCall(function=FunctionCall(name='retrieve_payment_status', arguments='{"transaction_id": "T1001"}'), id='D681PevKs', type='function')], prefix=False, role='assistant')]`
 
 ## Step 3. User: Execute function to obtain tool results
 
@@ -160,15 +246,10 @@ function_params = json.loads(tool_call.function.arguments)
 print("\nfunction_name: ", function_name, "\nfunction_params: ", function_params)
 ```
 
-`function_name:  retrieve_payment_status 
-function_params:  {'transaction_id': 'T1001'}`
-
 ```python
 function_result = names_to_functions[function_name](**function_params)
 function_result
 ```
-
-`'{"status": "Paid"}'`
 
 ```python
 messages.append({"role":"tool", "name":function_name, "content":function_result, "tool_call_id":tool_call.id})
@@ -177,8 +258,6 @@ messages.append({"role":"tool", "name":function_name, "content":function_result,
 ```python
 messages
 ```
-
-`[{'role': 'user', 'content': "What's the status of my transaction T1001?"}, AssistantMessage(content='', tool_calls=[ToolCall(function=FunctionCall(name='retrieve_payment_status', arguments='{"transaction_id": "T1001"}'), id='D681PevKs', type='function')], prefix=False, role='assistant'), {'role': 'tool', 'name': 'retrieve_payment_status', 'content': '{"status": "Paid"}', 'tool_call_id': 'D681PevKs'}]`
 
 ## Step 4. Model: Generate final answer
 
@@ -190,10 +269,4 @@ response = client.chat.complete(
     messages = messages
 )
 response.choices[0].message.content
-```
-
-`'The payment for transaction T1001 has been successfully paid.'`
-
-```python
-
 ```

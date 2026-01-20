@@ -299,7 +299,7 @@ class Audio:
     b64_wav = base64.b64encode(self.as_wav_bytes()).decode('utf-8')
     display(HTML(f"""
         <audio controls>
-          <source src="data:audio/wav;base64,{b64_wav}">
+          <source >
         </audio>
     """.strip()))
 
