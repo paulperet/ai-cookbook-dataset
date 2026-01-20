@@ -1,21 +1,3 @@
-##### Copyright 2025 Google LLC.
-
-
-```python
-# @title Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-```
-
-
 # Building Secure Agentic AI system with Gemini and Safety Guardrails
 ## Defending Against Jailbreaks using Google ADK with LLM-as-a-Judge and Model Armor
 In this notebook, you'll learn how to build **production-ready Agentic AI systems** with comprehensive **safety guardrails** using Google's Agent Development Kit (ADK), Gemini and Cloud services.
