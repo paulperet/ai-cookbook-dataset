@@ -1,6 +1,6 @@
 # AI Recipes Dataset
 
-A dataset build from open-source documentations and preprocessed using deepseek.
+A dataset built from open-source documentations. Jupyter notebooks preprocessed using deepseek.
 
 Sources :
 - https://github.com/d2l-ai/d2l-en
