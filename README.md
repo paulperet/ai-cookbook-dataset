@@ -3,6 +3,7 @@
 A dataset built from open-source documentations. Jupyter notebooks preprocessed using deepseek.
 
 Sources :
+- https://github.com/openai/openai-cookbook
 - https://github.com/d2l-ai/d2l-en
 - https://github.com/google-gemini/cookbook
 - https://github.com/anthropics/claude-cookbooks
