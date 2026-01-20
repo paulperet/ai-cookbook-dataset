@@ -1,4 +1,6 @@
-# ai-cookbook-dataset
+# AI Recipes Dataset
+
+A dataset build from open-source documentations and preprocessed using deepseek.
 
 Sources :
 - https://github.com/d2l-ai/d2l-en
