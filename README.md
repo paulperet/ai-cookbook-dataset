@@ -3,7 +3,10 @@
 A dataset built from open-source documentations. The goal is to create a high quality dataset for fine-tuning a LLM with expert knowledge on developping AI applications.
 
 ## Preprocessing
-Multiple preprocessing steps were used to make the dataset ready for LoRa fine-tuning. The first step was to convert the ipynb files to markdown as it will be our output format. This was done thanks to nbconvert. The second step was to use an LLM (DeepSeek V3.1) to clean the clutter from the output cells of the converted notebooks. Finally, I formatted all my examples using DeepSeek V3.1 to make them more like a step-by-step guide. This was done in the intent of having a high quality homogeneous dataset to maximize the effects of LoRa fine-tuning.
+Multiple preprocessing steps were used to make the dataset ready for LoRa fine-tuning: 
+1. Convert the ipynb files to markdown as it will be our output format. This was done thanks to nbconvert. 
+2. Use an LLM (DeepSeek V3.1) to clean the clutter from the output cells of the converted notebooks.
+3. Format all my examples using DeepSeek V3.1 to make them more like a step-by-step guide. This was done in the intent of having a high quality homogeneous dataset to maximize the effects of LoRa fine-tuning.
 
 ## Sources
 - https://github.com/openai/openai-cookbook
