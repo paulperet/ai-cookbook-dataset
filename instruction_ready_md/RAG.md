@@ -1,0 +1,165 @@
+# Building a RAG Pipeline with LlamaIndex and Mistral AI
+
+This guide walks you through building a Retrieval-Augmented Generation (RAG) pipeline using LlamaIndex, powered by Mistral AI's language and embedding models. You'll learn to create a basic RAG system and then use the index as a standalone retriever.
+
+## Prerequisites
+
+Ensure you have the following installed and configured:
+
+### 1. Install Required Packages
+
+```bash
+pip install llama-index
+pip install llama-index-embeddings-mistralai
+pip install llama-index-llms-mistralai
+```
+
+### 2. Set Up Your API Key
+
+You'll need a Mistral AI API key. Set it as an environment variable.
+
+```python
+import os
+os.environ['MISTRAL_API_KEY'] = '<YOUR_MISTRALAI_API_KEY>'
+```
+
+## Part 1: Building a Basic RAG Pipeline
+
+A basic RAG pipeline involves retrieving relevant context from your documents and using a language model to generate an answer. Let's build one step-by-step.
+
+### Step 1: Configure the LLM and Embedding Model
+
+First, import and initialize the Mistral AI models. We'll configure the global settings in LlamaIndex to use them.
+
+```python
+from llama_index.llms.mistralai import MistralAI
+from llama_index.embeddings.mistralai import MistralAIEmbedding
+from llama_index.core import Settings
+
+# Initialize the models
+llm = MistralAI(model='mistral-large')
+embed_model = MistralAIEmbedding()
+
+# Set them as the default for the pipeline
+Settings.llm = llm
+Settings.embed_model = embed_model
+```
+
+### Step 2: Download and Load Your Data
+
+For this tutorial, we'll use Uber's 2021 10-K filing as our sample document.
+
+```bash
+wget 'https://raw.githubusercontent.com/run-llama/llama_index/main/docs/docs/examples/data/10k/uber_2021.pdf' -O './uber_2021.pdf'
+```
+
+Now, load the PDF into LlamaIndex.
+
+```python
+from llama_index.core import SimpleDirectoryReader
+
+documents = SimpleDirectoryReader(input_files=["./uber_2021.pdf"]).load_data()
+```
+
+### Step 3: Process Documents into Nodes
+
+Documents need to be split into smaller chunks, or "nodes," for efficient retrieval. We'll use a token-based splitter.
+
+```python
+from llama_index.core.node_parser import TokenTextSplitter
+
+splitter = TokenTextSplitter(
+    chunk_size=512,  # Size of each chunk in tokens
+    chunk_overlap=0, # No overlap between chunks
+)
+
+nodes = splitter.get_nodes_from_documents(documents)
+```
+
+### Step 4: Create a Vector Index
+
+Create a vector store index from the nodes. This index will enable semantic search.
+
+```python
+from llama_index.core import VectorStoreIndex
+
+index = VectorStoreIndex(nodes)
+```
+
+### Step 5: Create a Query Engine
+
+The query engine combines retrieval and response synthesis. We'll configure it to retrieve the top 2 most relevant chunks.
+
+```python
+query_engine = index.as_query_engine(similarity_top_k=2)
+```
+
+### Step 6: Query the Pipeline
+
+Let's ask a question about the document's content.
+
+```python
+response = query_engine.query("What is the revenue of Uber in 2021?")
+print(response)
+```
+
+**Output:**
+```
+The total revenue for Uber in 2021 was $17,455 million. This includes revenue from various offerings such as Mobility, Delivery, Freight, and All Other revenue streams. The Mobility revenue was $6,953 million, Delivery revenue was $8,362 million, Freight revenue was $2,132 million, and All Other revenue was $8 million.
+```
+
+The query engine successfully retrieved the relevant financial data and synthesized a clear answer.
+
+## Part 2: Using the Index as a Retriever
+
+Sometimes you may want to use the retrieval component separately, for example, to inspect the source chunks. An index can easily be converted into a retriever.
+
+### Step 1: Create a Retriever from the Index
+
+Initialize a retriever that fetches the top 2 most similar nodes.
+
+```python
+retriever = index.as_retriever(similarity_top_k=2)
+```
+
+### Step 2: Retrieve Nodes for a Query
+
+Use the retriever to fetch relevant nodes without generating a final answer.
+
+```python
+retrieved_nodes = retriever.retrieve("What is the revenue of Uber in 2021?")
+```
+
+### Step 3: Inspect the Retrieved Nodes
+
+Let's examine the content and similarity scores of the retrieved nodes.
+
+```python
+from llama_index.core.response.notebook_utils import display_source_node
+
+for node in retrieved_nodes:
+    display_source_node(node, source_length=1000)
+```
+
+**Output (Summarized):**
+
+**Node 1:**
+*   **ID:** 96264fe5-bc88-4cf8-8905-a9691c39a5c9
+*   **Similarity Score:** 0.868
+*   **Content Excerpt:** A table showing Uber's revenue breakdown for 2019-2021, with the 2021 total listed as $17,455 million.
+
+**Node 2:**
+*   **ID:** 653f0be9-ecfc-4fac-9488-afbd65f44ef2
+*   **Similarity Score:** 0.859
+*   **Content Excerpt:** A paragraph stating "Revenue was $17.5 billion, or up 57% year-over-year..."
+
+The retriever successfully found the two most relevant text chunks containing the revenue information, which aligns with the answer generated by the full query engine.
+
+## Summary
+
+You've successfully built a RAG pipeline using LlamaIndex and Mistral AI. You learned how to:
+1.  Set up models and load documents.
+2.  Create an index and a full query engine for end-to-end question answering.
+3.  Use the index as a standalone retriever to fetch source context.
+
+This pipeline can be extended with more advanced features like query transformations, hybrid search, or custom post-processors to suit your specific application needs.
