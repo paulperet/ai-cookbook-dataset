@@ -18,3 +18,8 @@ Multiple preprocessing steps were used to make the dataset ready for LoRa fine-t
 - https://github.com/meta-llama/llama-cookbook
 - https://github.com/mistralai/cookbook
 - https://github.com/microsoft/PhiCookBook
+
+## License
+This dataset is licensed under Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
+
+This dataset includes content from several third-party sources (OpenAI, Meta, Google, etc.). See THIRD_PARTY_NOTICES.txt for the original licenses and copyright notices for these materials.
