@@ -1,4 +1,4 @@
-# AI Recipes Dataset
+# AI Guides Dataset
 
 A collection of guides and tutorials built from open-source documentations. It aims to create a high quality dataset for fine-tuning a LLM with expert knowledge on developping complex AI applications.
 
